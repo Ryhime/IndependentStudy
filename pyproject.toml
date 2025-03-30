@@ -5,7 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "Ryan", email = "ryhime1@gmail.com"},
 ]
-dependencies = []
+dependencies = ["mininet>=2.3.0.dev6"]
 requires-python = "==3.12.*"
 readme = "README.md"
 license = {text = "MIT"}
