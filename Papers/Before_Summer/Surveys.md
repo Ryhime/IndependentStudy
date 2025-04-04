@@ -22,6 +22,14 @@ Take Aways:
 - Has a temporal component - 1D-CNN, Attention LSTM, Bi-LSTM, Transformer, etc.
 - Augmented graph data like using a gaussian smooth on images
 
+# The reinforcement one-FILL IN LATER
+Take Aways:
+- Used RL but seems like random data
+- Only uses 3 layer GNN
+- Does not use spatio temporal GNN
+- I THINK THIS IS A GOOD STARTING POINT
+- But there is no benchmark though...
+
 # TODO
 Find sources using spatio-temporal GNNs on link scheduling
 Random links maybe read:
