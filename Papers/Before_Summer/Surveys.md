@@ -17,4 +17,13 @@ Take Aways:
 https://arxiv.org/pdf/2301.10569
 
 Take Aways:
+- Mention graph transformer as a big go to
+- Has a spatio component - GCN, GAT, etc.
+- Has a temporal component - 1D-CNN, Attention LSTM, Bi-LSTM, Transformer, etc.
+- Augmented graph data like using a gaussian smooth on images
 
+# TODO
+Find sources using spatio-temporal GNNs on link scheduling
+Random links maybe read:
+https://ieeexplore.ieee.org/abstract/document/10321744
+https://ieeexplore.ieee.org/abstract/document/10888417
