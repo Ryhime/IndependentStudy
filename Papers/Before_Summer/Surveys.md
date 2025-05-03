@@ -43,9 +43,31 @@ https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10411651
 # Hyper-SAGNN: a self-attention based graph neural network for hypergraphs
 https://arxiv.org/pdf/1911.02613
 
-- Don't know if it would be applicable for wired networks since everything is 1 to 1, but maybe wireless?
+- Do primarily hyper-link prediction (other tasks too)
+- From a list of vertices (v_1, ..., v_n) that make up a hyper edge they determine if it is part of the graph
+- To do this they embedd each vertice twice, one static, one dynamic
+- Static uses an encoder -> feed forward network for each vertice and dynamic uses similar structure to GAT
+- Then take the distance between the static and dynamic vectors of each vertex (s-d)^2 -> take the mean -> use that vector for prediction
+  - This helps determine how much outside influence affects the hyper edge
+- Outperforms things like node2Vec, random walk, etc.
+- Not sure how much application it is towards SDNs (if it can be represented as a hyper graph) but good to keep in the back of my mind
+
+# RouteNet-Fermi: Network Modeling with Graph Neural Networks
+arxiv.org/abs/2212.12070
+
+- When they use a RNN they don't go by time they go by the path the packet takes
+    Ex: Packet travels: L1->L2->L3: The RNN uses L1->L2->L3 embeddings.
+- This they use in the final RouteNet-Fermi shown in Fig. 6 RNN is not by time but follows the path of the packets: flow -> queue -> links -> flow -> ...
+    - This makes it weaker (they claim it still works though) for non-markovian traffic models since they don't take time as an aspect (not spatio-temporal)
+- Initial results with a regular MPNN GNN show they are about the same as a RNN
+- OMNet++ for dataset generator
+- Table IV has good simulation variables to change
+- Scales well to large networks (attribute of GNNs in general) but error still increases a little when increasing network size
+- Use RouteNet-Fermi on actual live data gets an even lower error rate
+
+# RouteNet: Network Modeling and Optimization in SDN
+
+
 
 TODO:
-- Read Hyper-SAGNN
-- Watch that hyper graph series on youtube
 - Continue looking at spatio-temporal GNNs
