@@ -20,4 +20,18 @@ https://networkrepository.com/temporal-networks.php
 3 - Run a STGNN to try to predict things like jitter, average delay, delay per node
 4 - Use that feed back as a reinforcement loss for routing configuration
 
-Some metrics - queue length, 
+
+Things to consider:
+Would need to train the STGNN predicting jitter, average delay, delay per node before hand since it is predicting at the next time point
+How would I then change the routing configuration? Would it be a transformer GNN?
+Time complexity of the system
+Maybe consider a GAN approach? - Instead of sending packets randomly use a GNN "attacker"
+
+
+Some metrics - queue length, average delay, delay per node
+Compare it with things like a DNN, LSTM
+
+
+# Simulation Ideas
+- Can get fancy like having some users have heavy loads all at once, some downloading files, etc.
+- Can also have QoS requirements which I think are already in Internet Topology Zoo
