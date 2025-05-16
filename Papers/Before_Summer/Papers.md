@@ -46,4 +46,16 @@ arxiv.org/abs/2212.12070
 
 
 # Building a Digital Twin for network optimization using Graph Neural Networks
-https://dl.acm.org/doi/10.1016/j.comnet.2022.109329
+https://www.sciencedirect.com/science/article/pii/S1389128622003681
+- Dataset: Internet Topology Zoo
+
+
+https://www.mdpi.com/1999-5903/15/12/377
+
+
+# Routenet + Spatio Temporal
+https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10311550
+
+
+TODO:
+Should look into using queing theory for network modeling (that they did in the past)
