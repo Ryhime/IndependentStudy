@@ -44,6 +44,25 @@ arxiv.org/abs/2212.12070
 - Scales well to large networks (attribute of GNNs in general) but error still increases a little when increasing network size
 - Use RouteNet-Fermi on actual live data gets an even lower error rate
 
+# Research on the Application of Deep Reinforcement Learning in SDN Routing Optimization
+https://link.springer.com/chapter/10.1007/978-981-96-4963-1_21
+
+- Uses deep Q network reinforcement learning to optimize routing strategies
+  - Does not elaborate on specifics though
+- Use randomly generated data on a topology
+- Figure 3 shows a comparison between OSPF and Least Load Routing Algorithms
+
+# A Performance Prediction Method Based on Multi-task Spatio-Temporal Convolution Network for SDN Heterogeneous Network
+https://link.springer.com/chapter/10.1007/978-981-96-0313-8_20#Abs1
+
+- Uses a STGNN to predict future link performance
+- Uses a single topology for testing - STGNN outperforms LSTM and Bi-LSTM by a large margin (by ~35%)
+- Good starting point
+- Downsides/Places to Improve:
+  - Does not test against a lot of baselines (like base GNN)
+  - Does not use up to date STGNN for both the spatio (GCN) and temporal (gated convolution) components
+  - Only uses one topology
+
 
 # Building a Digital Twin for network optimization using Graph Neural Networks
 https://www.sciencedirect.com/science/article/pii/S1389128622003681

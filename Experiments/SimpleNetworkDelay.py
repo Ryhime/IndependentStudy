@@ -2,9 +2,10 @@ import networkx as nx
 import random
 import simpy
 import matplotlib.pyplot as plt
+import pandas as pd
 
-link_delay = 20
-c = 3
+link_delay = 50
+c = 5
 
 env = simpy.Environment()
 topology_file = "/home/ryhime/Desktop/gnnet-ch21-dataset-test/ch21-test-setting-1/50/graphs/graph-50-0-1.txt"
@@ -32,12 +33,12 @@ def send_packet(env, graph, src, dest, delays):
     delays.append(total_queueing)
 
 
-def run_simulation(num_packets=500000):
+def run_simulation(num_packets=100):
     results = []
 
     def packet_generator():
         for _ in range(num_packets):
-            env.process(send_packet(env, G, 3, 48, results))
+            env.process(send_packet(env, G, random.randint(0, 20), random.randint(21, 40), results))
             interarrival = random.expovariate(1/3.0)
             yield env.timeout(interarrival)
 
@@ -46,8 +47,12 @@ def run_simulation(num_packets=500000):
     return results
 
 delays = run_simulation()
+# Smooths the series by getting the mean
+# NOTE: IDK if should take this out or have it be part of the model?
+series = pd.Series(delays)
+delays = series.rolling(window=20).mean()
 
-plt.plot(range(len(delays)), delays)
+plt.scatter(range(len(delays)), delays)
 plt.title("Line Graph with Custom X")
 plt.xlabel("Time (s)")
 plt.ylabel("Measurement")
