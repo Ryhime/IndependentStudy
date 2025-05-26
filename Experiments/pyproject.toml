@@ -5,7 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "Ryan", email = "ryhime1@gmail.com"},
 ]
-dependencies = ["networkx>=3.4.2", "simpy>=4.1.1", "matplotlib>=3.10.3", "statsmodels>=0.14.4", "pandas>=2.2.3"]
+dependencies = ["networkx>=3.4.2", "simpy>=4.1.1", "matplotlib>=3.10.3", "statsmodels>=0.14.4", "pandas>=2.2.3", "torch-geometric>=2.6.1", "torch>=2.7.0"]
 requires-python = "==3.10.*"
 readme = "README.md"
 license = {text = "MIT"}
