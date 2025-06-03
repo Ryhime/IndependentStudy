@@ -37,3 +37,9 @@ Compare it with things like a DNN, LSTM
 - Can also have QoS requirements which I think are already in Internet Topology Zoo
 - To get the average network metrics can use ARMA (Can also use ARMA-Conv for predictions then)
 - ARMA CONV IS PERFECT FOR THIS SCENARIO ALSO TRY WITH DIFFERENT GNNS THOUGH
+
+
+# For the dynamic routing part have backup routes initially can use:
+- Reinforcement
+- Least Load
+- The multiple paths found first can be weighted with the length to each destination node
