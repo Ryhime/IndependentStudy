@@ -46,5 +46,3 @@ https://www.fruct.org/files/publications/volume-37/fruct37/Pap.pdf
 - Use a traffic matrix for input into the reinforcement learning neural network
 - Uses a CNN (does not capture time because of this though)
 - Does much better than a DNN
-
-file:///home/ryhime/Downloads/7126-21793-1-PB.pdf
