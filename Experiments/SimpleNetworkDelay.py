@@ -1,82 +1,71 @@
 import networkx as nx
-import random
-import simpy
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
+import random
 
-def send_packet(env, graph, src, dest, delays, graphs):
-    path = nx.shortest_path(graph, source=src, target=dest)
-    print(len(path))
-    total_queueing = 0
+# --- 1. Build the network ---
+G = nx.DiGraph()
+# Define edges with capacities (packets per time slot)
+edges = [
+    ("src1", "bottleneck", 2),
+    ("src2", "bottleneck", 2),
+    ("bottleneck", "dst", 2)
+]
+for u, v, cap in edges:
+    G.add_edge(u, v, capacity=cap)
 
-    for n in path:
-        node = graph.nodes[n]
-        resource = node["queueSizes"]
+# --- 2. Define flows with paths ---
+flows = {
+    "f1": nx.shortest_path(G, "src1", "dst"),
+    "f2": nx.shortest_path(G, "src2", "dst")
+}
 
-        # Request access to the link (queueing delay happens here)
-        request_time = env.now
-        node["inQueue"] += 1
-        node["inQueueHistory"].append(node["inQueue"])
-        with resource.request() as req:
-            yield req
-            queueing_delay = env.now - request_time
-            total_queueing += queueing_delay
+# Initialize CWND and history
+cwnd = {f: 1 for f in flows}       # start at 1 packet
+ssthresh = {f: 8 for f in flows}  # arbitrary slow-start threshold
+history = {f: [] for f in flows}
 
-            yield env.timeout(node["linkDelay"])
-            node["inQueue"] -= 1
-            node["inQueueHistory"].append(node["inQueue"])
-            total_queueing += node["linkDelay"]
+# AIMD parameters
+AI = 1     # additive increase per RTT
+MD = 0.5   # multiplicative decrease factor
 
-    delays.append(total_queueing)
-    graphs.append(nx.Graph(graph))
+SLOTS = 200
 
+# --- 3. Simulation Loop ---
+for t in range(SLOTS):
+    # Count load on each edge
+    edge_load = {e: 0 for e in G.edges}
+    # Tentatively send cwnd packets per flow
+    for f, path in flows.items():
+        for u, v in zip(path, path[1:]):
+            edge_load[(u, v)] += cwnd[f]
 
-def run_simulation(num_packets=100, link_delay = 10, queue_size = 2):
-    env = simpy.Environment()
-    topology_file = "/home/ryhime/Desktop/gnnet-ch21-dataset-test/ch21-test-setting-1/50/graphs/graph-50-0-1.txt"
-    G = nx.read_gml(topology_file, destringizer=int)
-    for n in G.nodes:
-        G.nodes[n]["queueSizes"] = simpy.Resource(env, capacity=queue_size)
-        G.nodes[n]["inQueue"] = 0
-        G.nodes[n]["linkDelay"] = link_delay
-        G.nodes[n]["inQueueHistory"] = []
+    # Apply capacity checks and update CWNDs
+    flows_lost = set()
+    for (u, v), load in edge_load.items():
+        cap = G[u][v]['capacity']
+        if load > cap:
+            # packet loss occurred on this link
+            for f, path in flows.items():
+                if (u, v) in zip(path, path[1:]):
+                    flows_lost.add(f)
 
-    delays = []
-    graphs = []
+    # Update cwnd based on losses
+    for f in flows:
+        if f in flows_lost:
+            ssthresh[f] = max(cwnd[f] * MD, 1)
+            cwnd[f] = max(cwnd[f] * MD, 1)
+        else:
+            # additive increase
+            cwnd[f] += AI
 
-    def packet_generator():
-        for i in range(num_packets):
-            env.process(send_packet(env, G, random.randint(0, 20), random.randint(20, 41), delays, graphs))
-            if (i % 1000 == 0):
-                yield env.timeout(100000)
-            yield env.timeout(np.random.uniform(50, 250))
+        history[f].append(cwnd[f])
 
-    env.process(packet_generator())
-    env.run()
-
-    # Return the average delay over time
-    averages = []
-    print(delays)
-    n = 100
-    for i, d in enumerate(delays):
-        if (i < n): continue
-        sm = sum(delays[i-n:i+1])
-        averages.append(sm/float(n))
-
-    return (averages, graphs)
-
-
-if __name__ == "__main__":
-    delays, graphs = run_simulation(10000)
-    # Smooths the series by getting the mean
-    # NOTE: IDK if should take this out or have it be part of the model?
-    series = pd.Series(delays)
-    # delays = series.rolling(window=5).mean()
-
-    plt.plot(range(len(delays)), delays)
-    plt.title("Average End to End Delay Over Time For Last 100 Packets")
-    plt.xlabel("Packet #")
-    plt.ylabel("Average End to End Delay")
-    plt.grid(True)
-    plt.savefig("Delays.png")
+# --- 4. Plot the results ---
+for f, data in history.items():
+    plt.plot(data, label=f)
+plt.xlabel("Time slot")
+plt.ylabel("CWND")
+plt.title("TCP AIMD congestion window over time")
+plt.legend()
+plt.grid(True)
+plt.savefig("Out.png")
