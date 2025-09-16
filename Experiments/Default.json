@@ -1,0 +1,69 @@
+{
+    "description": "Sending hosts are all on one side of a link the recieving is on the other side of the router.",
+    "links": [
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h1",
+                "congestion_control": "reno"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h3",
+                "congestion_control": "reno"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h4",
+                "congestion_control": "reno"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "host",
+                "id": "h2",
+                "congestion_control": "reno"
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0.2
+        }
+    ]
+}

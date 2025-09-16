@@ -47,10 +47,32 @@ class Link:
                 elif (self.router_out.id == packet.id_sequence[0]):
                     to_send_device = self.router_out
                 else:
-                    raise("Could not find correct path.")
+                    raise Exception("Could not find correct path.")
                 
                 if (to_send_device.device_type == "host"):
                     print("Arrived at host " + str(to_send_device.id))
+                    # Deliver the packet to the host for processing with current tick
+                    to_send_device.receive_packet(packet, tick_num)
+                    
+                    # If this is a data packet (not ACK), generate and send ACK back
+                    if not packet.is_ack:
+                        # Create ACK packet with path back to source
+                        # Use the original_path from the data packet to determine the return path
+                        routers = packet.original_path[:-1]  # Get all routers from the original path
+                        ack_path = routers[::-1]  # Reverse the router order
+                        ack_path.append(packet.source_id)  # Add the source host as destination
+                        ack_packet = Packet(
+                            id_sequence=ack_path,
+                            packet_size_bytes=0,  # ACK packets are small
+                            seq_num=0,
+                            ack_num=packet.seq_num,
+                            is_ack=True,
+                            source_id=to_send_device.id,
+                            dest_id=packet.source_id
+                        )
+                        # Send ACK back through the network
+                        to_send_device.send_packet(ack_packet)
+                        print(f"Host {to_send_device.id} generated ACK for seq {packet.seq_num}")
                 else:
                     packet.id_sequence = packet.id_sequence[1:len(packet.id_sequence)]
                     packet.processing_time = to_send_device.processing_delay_ms

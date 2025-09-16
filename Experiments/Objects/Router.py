@@ -24,6 +24,11 @@ class Router(Device):
             return
         packet.processing_time-=1
         if packet.processing_time <= 0:
+            print(self.id, self.forwarding_table)
+            if self.id == "r2":
+                print(self.forwarding_table["h3"].router_out.id)
+                print(self.forwarding_table["h3"].router_in.id)
+                print("==========")
             to_send_to: Link = self.forwarding_table[packet.id_sequence[0]]
             packet.processing_time = to_send_to.delay_ms
             to_send_to.packets.append(packet)

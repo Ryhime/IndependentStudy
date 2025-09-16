@@ -12,10 +12,10 @@ class Network:
         self.links = []
 
 
-    def add_host(self, id: str):
+    def add_host(self, id: str, congestion_control: str = "reno"):
         if id in self.devices:
             return None
-        self.devices[id] = Host(id)
+        self.devices[id] = Host(id, congestion_control)
         
     def add_router(self, queue_size: int, processing_delay_ms: int, id: str):
         if id in self.devices:
