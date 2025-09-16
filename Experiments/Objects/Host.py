@@ -1,12 +1,12 @@
 from Objects.Device import Device
 from Objects.Packet import Packet
 from Objects.Link import Link
-from Objects.CongestionControl import RenoCongestionControl, BBRCongestionControl
+from Objects.CongestionControl import CongestionControl, RenoCongestionControl, BBRCongestionControl, VegasCongestionControl
 
 class Host(Device):
     next_seq_num: int
     unacked_packets: dict  # seq_num -> (packet, send_tick, retransmit_count)
-    congestion_control: object  # Congestion control algorithm instance
+    congestion_control: CongestionControl  # Congestion control algorithm instance
 
     def __init__(self, id: str, congestion_control: str = "reno"):
         super().__init__("host", id)
@@ -16,6 +16,8 @@ class Host(Device):
         # Initialize congestion control
         if congestion_control.lower() == "bbr":
             self.congestion_control = BBRCongestionControl()
+        elif congestion_control.lower() == "vegas":
+            self.congestion_control = VegasCongestionControl()
         else:
             self.congestion_control = RenoCongestionControl()
         
@@ -34,7 +36,14 @@ class Host(Device):
             return  # Congestion window full
 
         # Create path for the packet (simplified: assume we know the path to dest)
-        path = ["r1", "h2"]
+        if self.id == "h1":
+            path = ["r1", "r2", "r3", "h4"]
+        elif self.id == "h2":
+            path = ["r1", "r2", "h3"]
+        elif self.id == "h3":
+            path = ["r2", "r1", "h1"]
+        else:
+            return
         seq_num = self.next_seq_num
         self.next_seq_num += 1
 
@@ -66,7 +75,7 @@ class Host(Device):
 
         elif ack_num < max(self.unacked_packets.keys(), default=0):
             # Duplicate ACK
-            new_cwnd = self.congestion_control.on_dup_ack(ack_num, current_tick)
+            new_cwnd = self.congestion_control.on_dup_ack(ack_num, current_tick)  # type: ignore
             if new_cwnd is not None:
                 # Fast retransmit triggered
                 self.retransmit_packet(ack_num + 1, current_tick)
@@ -84,7 +93,7 @@ class Host(Device):
     def retransmit_packet(self, seq_num: int, current_tick: int):
         """Retransmit a specific packet"""
         if seq_num in self.unacked_packets:
-            packet, old_send_tick, retransmit_count = self.unacked_packets[seq_num]
+            packet, _, retransmit_count = self.unacked_packets[seq_num]
             packet.retransmit_count += 1
             # Reset the path to original for retransmission
             packet.id_sequence = packet.original_path.copy()
@@ -96,9 +105,6 @@ class Host(Device):
         """Handle incoming packets (both data and ACK)"""
         if packet.is_ack:
             self.handle_ack(packet, current_tick)
-        else:
-            # For data packets, we just acknowledge them (handled in Link)
-            pass  # ACK generation is handled in Link class
 
     def process_tick(self, tick_num: int):
         # Check for timeouts

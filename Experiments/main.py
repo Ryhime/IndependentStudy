@@ -2,6 +2,8 @@ import json
 import time
 from Objects.Network import Network
 
+NETWORK_CONFIG = "Configs/Bus.json"
+
 
 
 
@@ -17,7 +19,7 @@ def add_link_to_network(network: Network, link_data: dict):
     network.add_link(link_data["link_delay_ms"], link_data["bandwidth_in_bytes"], link_data["loss_rate"], link_data["device_one"]["id"], link_data["device_two"]["id"])
 
 
-j = open("Config.json", "r")
+j = open(NETWORK_CONFIG, "r")
 
 data = json.load(j)
 network = Network()

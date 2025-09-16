@@ -184,3 +184,80 @@ class BBRCongestionControl(CongestionControl):
         # BBR doesn't use fast retransmit in the same way as Reno
         # Just update estimates if needed
         return None
+class VegasCongestionControl(CongestionControl):
+    """TCP Vegas congestion control algorithm implementation."""
+    
+    def __init__(self):
+        super().__init__()
+        self.base_rtt: float = float('inf')  # Minimum observed RTT
+        self.current_rtt: float = float('inf')  # Current RTT sample
+        self.alpha: float = 1.0  # Vegas parameter for lower threshold
+        self.beta: float = 3.0   # Vegas parameter for upper threshold
+        self.packet_sent_times: dict[int, int] = {}  # Track when packets were sent
+        
+    def on_packet_sent(self, seq_num: int, current_tick: int):
+        """Record packet sent time for RTT calculation."""
+        self.packet_sent_times[seq_num] = current_tick
+        
+    def on_ack_received(self, ack_num: int, current_tick: int) -> Optional[float]:
+        """Handle ACK reception for Vegas."""
+        self.last_ack_tick = current_tick
+        
+        # Calculate RTT if we have the sent time for this packet
+        if ack_num in self.packet_sent_times:
+            sent_time = self.packet_sent_times[ack_num]
+            self.current_rtt = current_tick - sent_time
+            
+            # Update base RTT (minimum observed RTT)
+            if self.current_rtt < self.base_rtt:
+                self.base_rtt = self.current_rtt
+            
+            # Remove the recorded sent time
+            del self.packet_sent_times[ack_num]
+        
+        # Calculate expected and actual throughput using base RTT and current RTT
+        if self.base_rtt != float('inf') and self.current_rtt != float('inf'):
+            expected_throughput = self.cwnd / self.base_rtt
+            actual_throughput = self.cwnd / self.current_rtt
+            
+            # Calculate the difference (number of extra packets due to congestion)
+            diff = (expected_throughput - actual_throughput) * self.base_rtt
+            
+            # Adjust congestion window based on Vegas algorithm
+            if diff < self.alpha:
+                # Below lower threshold: increase cwnd
+                self.cwnd += 1
+            elif diff > self.beta:
+                # Above upper threshold: decrease cwnd
+                self.cwnd = max(self.cwnd - 1, 1)  # Ensure cwnd doesn't go below 1
+            # Else: keep cwnd unchanged (between alpha and beta)
+        
+        return self.cwnd
+    
+    def on_timeout(self, seq_num: int, current_tick: int) -> Optional[float]:
+        """Handle timeout for Vegas."""
+        # Vegas responds to timeouts by reducing cwnd more aggressively
+        self.ssthresh = max(self.cwnd / 2, 2)
+        self.cwnd = 1
+        self.in_fast_recovery = False
+        self.dup_ack_count = 0
+        
+        # Reset RTT measurements on timeout
+        self.base_rtt = float('inf')
+        self.current_rtt = float('inf')
+        
+        return self.cwnd
+    
+    def on_dup_ack(self, ack_num: int, current_tick: int) -> Optional[float]:
+        """Handle duplicate ACK for Vegas."""
+        # Vegas doesn't use fast retransmit in the same way as Reno
+        # But we can still respond to duplicate ACKs
+        self.dup_ack_count += 1
+        if self.dup_ack_count == 3 and not self.in_fast_recovery:
+            # Similar to Reno's fast retransmit but with Vegas adjustments
+            self.ssthresh = max(self.cwnd / 2, 2)
+            self.cwnd = self.ssthresh
+            self.in_fast_recovery = True
+            self.recovery_seq = ack_num + 1
+            return self.cwnd
+        return None
