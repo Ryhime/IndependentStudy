@@ -2,6 +2,7 @@ from Objects.Host import Host
 from Objects.Router import Router
 from Objects.Link import Link
 from Objects.Device import Device
+from Enums.CongestionControlType import CongestionControlType
 
 class Network:
     devices: dict
@@ -12,10 +13,10 @@ class Network:
         self.links = []
 
 
-    def add_host(self, id: str, congestion_control: str = "reno"):
+    def add_host(self, id: str, routing_path: list[str] = [], congestion_control: CongestionControlType = CongestionControlType.RENO):
         if id in self.devices:
             return None
-        self.devices[id] = Host(id, congestion_control)
+        self.devices[id] = Host(id, routing_path, congestion_control)
         
     def add_router(self, queue_size: int, processing_delay_ms: int, id: str):
         if id in self.devices:

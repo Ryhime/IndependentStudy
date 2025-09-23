@@ -8,9 +8,9 @@ def add_router_to_network(network: Network, device_data: dict):
     network.add_router(device_data["queue_size"], device_data["processing_delay_ms"], device_data["id"])
 
 def add_host_to_network(network: Network, device_data: dict):
-    # Extracts congestion_control from device data, default to "reno" if not specified
     congestion_control = device_data.get("congestion_control", "reno")
-    network.add_host(device_data["id"], congestion_control)
+    routing_path = device_data.get("packet_path", [])
+    network.add_host(device_data["id"], routing_path, congestion_control)
 
 def add_link_to_network(network: Network, link_data: dict):
     network.add_link(link_data["link_delay_ms"], link_data["bandwidth_in_bytes"], link_data["loss_rate"], link_data["device_one"]["id"], link_data["device_two"]["id"])
@@ -43,7 +43,7 @@ for link in links:
 
 # Main loop
 tick_num = 0
-max_ticks = 90000  # Limit for testing
+max_ticks = 90000
 while tick_num < max_ticks:
     time.sleep(.001)
     tick_num += 1

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-import Enum
+from Enums.BBRStage import BBRStage
 
 class CongestionControl(ABC):
     """Abstract base class for congestion control algorithms."""
@@ -91,12 +91,6 @@ class RenoCongestionControl(CongestionControl):
             self.recovery_seq = ack_num + 1
             return self.cwnd
         return None
-
-class BBRStage(Enum):
-    STARTUP = 1
-    DRAIN = 2
-    PROB_BW = 3
-    PROB_RTT = 4
 
 class BBRCongestionControl(CongestionControl):
     """BBR (Bottleneck Bandwidth and Round-trip propagation time) congestion control."""

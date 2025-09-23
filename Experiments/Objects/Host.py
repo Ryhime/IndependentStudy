@@ -1,3 +1,4 @@
+from Enums.CongestionControlType import CongestionControlType
 from Objects.Device import Device
 from Objects.Packet import Packet
 from Objects.Link import Link
@@ -6,20 +7,23 @@ from Objects.CongestionControl import CongestionControl, RenoCongestionControl, 
 class Host(Device):
     next_seq_num: int
     unacked_packets: dict  # seq_num -> (packet, send_tick, retransmit_count)
-    congestion_control: CongestionControl  # Congestion control algorithm instance
+    congestion_control: CongestionControl
 
-    def __init__(self, id: str, congestion_control: str = "reno"):
+    def __init__(self, id: str, routing_path: list[str] = [], congestion_control: CongestionControlType = CongestionControlType.RENO):
         super().__init__("host", id)
         self.next_seq_num = 0
         self.unacked_packets = {}
         
-        # Initialize congestion control
-        if congestion_control.lower() == "bbr":
+        if congestion_control == CongestionControlType.BBR:
             self.congestion_control = BBRCongestionControl()
-        elif congestion_control.lower() == "vegas":
+        elif congestion_control == CongestionControlType.VEGAS:
             self.congestion_control = VegasCongestionControl()
-        else:
+        elif congestion_control == CongestionControlType.RENO:
             self.congestion_control = RenoCongestionControl()
+        else:
+            raise ValueError("Not a valid congestion control enum used")
+        
+        self.routing_path = routing_path
         
         self.file = open(self.id, "w")
 
@@ -32,23 +36,14 @@ class Host(Device):
 
     def send_data_packet(self, dest_host_id: str, data_size: int, current_tick: int):
         """Send a data packet with congestion control"""
-        if len(self.unacked_packets) >= self.congestion_control.get_cwnd():
-            return  # Congestion window full
-
-        # Create path for the packet (simplified: assume we know the path to dest)
-        if self.id == "h1":
-            path = ["r1", "r2", "r3", "h4"]
-        elif self.id == "h2":
-            path = ["r1", "r2", "h3"]
-        elif self.id == "h3":
-            path = ["r2", "r1", "h1"]
-        else:
+        if len(self.unacked_packets) >= self.congestion_control.get_cwnd() or len(self.routing_path) <= 0:
             return
+
         seq_num = self.next_seq_num
         self.next_seq_num += 1
 
         p = Packet(
-            id_sequence=path,
+            id_sequence=self.routing_path,
             packet_size_bytes=data_size,
             seq_num=seq_num,
             source_id=self.id,
