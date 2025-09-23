@@ -11,7 +11,7 @@ def add_router_to_network(network: Network, device_data: dict):
     network.add_router(device_data["queue_size"], device_data["processing_delay_ms"], device_data["id"])
 
 def add_host_to_network(network: Network, device_data: dict):
-    # Extract congestion_control from device data, default to "reno" if not specified
+    # Extracts congestion_control from device data, default to "reno" if not specified
     congestion_control = device_data.get("congestion_control", "reno")
     network.add_host(device_data["id"], congestion_control)
 
