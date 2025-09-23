@@ -4,9 +4,6 @@ from Objects.Network import Network
 
 NETWORK_CONFIG = "Configs/Bus.json"
 
-
-
-
 def add_router_to_network(network: Network, device_data: dict):
     network.add_router(device_data["queue_size"], device_data["processing_delay_ms"], device_data["id"])
 

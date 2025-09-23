@@ -1,5 +1,5 @@
 {
-    "description": "Sending hosts are all on one side of a link the recieving is on the other side of the router.",
+    "description": "TODO - PATHS. Sending hosts are all on one side of a link the recieving is on the other side of the router.",
     "links": [
         {
             "device_one": {

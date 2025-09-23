@@ -5,7 +5,10 @@
             "device_one": {
                 "type": "host",
                 "id": "h1",
-                "congestion_control": "reno"
+                "congestion_control": "reno",
+                "packet_path": [
+                    "r1", "r2", "r3", "h4"
+                ]
             },
             "device_two": {
                 "type": "router",
@@ -21,7 +24,10 @@
             "device_one": {
                 "type": "host",
                 "id": "h2",
-                "congestion_control": "reno"
+                "congestion_control": "reno",
+                "packet_path": [
+                    "r1", "r2", "h3"
+                ]
             },
             "device_two": {
                 "type": "router",
@@ -54,7 +60,10 @@
             "device_one": {
                 "type": "host",
                 "id": "h3",
-                "congestion_control": "reno"
+                "congestion_control": "reno",
+                "packet_path": [
+                    "r2", "r1", "h2"
+                ]
             },
             "device_two": {
                 "type": "router",
@@ -87,7 +96,10 @@
             "device_one": {
                 "type": "host",
                 "id": "h4",
-                "congestion_control": "reno"
+                "congestion_control": "reno",
+                "packet_path": [
+                    "r3", "r2", "r1", "h1"
+                ]
             },
             "device_two": {
                 "type": "router",
