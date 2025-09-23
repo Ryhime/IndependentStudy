@@ -1,3 +1,4 @@
+- Better doc strings
 - Linting
 - Code Re-review/clean up
 - More metrics than just CWND
