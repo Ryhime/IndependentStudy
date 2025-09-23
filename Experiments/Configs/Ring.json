@@ -1,0 +1,203 @@
+{
+    "description": "Routers are in a ring with a host connected to each router",
+    "links": [
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h1",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h2",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r2",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h3",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r3",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h4",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r4",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h5",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r5",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "host",
+                "id": "h6",
+                "congestion_control": "bbr"
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r6",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r2",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r2",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r3",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r3",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r4",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r4",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r5",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r5",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r6",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        },
+        {
+            "device_one": {
+                "type": "router",
+                "id": "r6",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "device_two": {
+                "type": "router",
+                "id": "r1",
+                "queue_size": 5,
+                "processing_delay_ms": 0
+            },
+            "link_delay_ms": 100,
+            "bandwidth_in_bytes": 100,
+            "loss_rate": 0
+        }
+    ]
+}

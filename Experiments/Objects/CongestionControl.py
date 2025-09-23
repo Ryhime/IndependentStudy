@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+import Enum
 
 class CongestionControl(ABC):
     """Abstract base class for congestion control algorithms."""
@@ -65,9 +66,9 @@ class RenoCongestionControl(CongestionControl):
         else:
             # Slow start or congestion avoidance
             if self.cwnd < self.ssthresh:
-                self.cwnd += 1  # Slow start: exponential growth
+                self.cwnd += 1
             else:
-                self.cwnd += 1.0 / self.cwnd  # Congestion avoidance: additive increase
+                self.cwnd += 1.0 / self.cwnd
         
         return self.cwnd
     
@@ -91,6 +92,11 @@ class RenoCongestionControl(CongestionControl):
             return self.cwnd
         return None
 
+class BBRStage(Enum):
+    STARTUP = 1
+    DRAIN = 2
+    PROB_BW = 3
+    PROB_RTT = 4
 
 class BBRCongestionControl(CongestionControl):
     """BBR (Bottleneck Bandwidth and Round-trip propagation time) congestion control."""
@@ -103,7 +109,7 @@ class BBRCongestionControl(CongestionControl):
         self.delivery_rate = 0.0
         self.pacing_gain = 2.89
         self.cwnd_gain = 2.0 
-        self.state = "STARTUP"
+        self.state = BBRStage.STARTUP
         self.cycle_index = 0
         self.rt_prop_stamp = 0
         self.packet_count = 0
@@ -149,16 +155,16 @@ class BBRCongestionControl(CongestionControl):
     
     def _update_state(self, current_tick: int):
         """Update BBR state machine."""
-        if self.state == "STARTUP":
+        if self.state == BBRStage.STARTUP:
             if self.btl_bw > 0 and self.cwnd >= 2 * self.btl_bw * self.rt_prop:
-                self.state = "DRAIN"
+                self.state = BBRStage.DRAIN
                 self.pacing_gain = 1.0 / 2.89  # Inverse of startup gain
-        elif self.state == "DRAIN":
+        elif self.state == BBRStage.DRAIN:
             if self.cwnd <= self.btl_bw * self.rt_prop:
-                self.state = "PROBE_BW"
+                self.state = BBRStage.PROB_BW
                 self.pacing_gain = 1.0
                 self.cycle_index = 0
-        elif self.state == "PROBE_BW":
+        elif self.state == BBRStage.DRAIN:
             # Cycle through gains: 1.25, 0.75, 1, 1, 1, 1, 1, 1
             gains = [1.25, 0.75, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
             self.pacing_gain = gains[self.cycle_index % len(gains)]
@@ -166,17 +172,17 @@ class BBRCongestionControl(CongestionControl):
             
             # Check for PROBE_RTT every 10 seconds (simplified)
             if current_tick % 10000 == 0:
-                self.state = "PROBE_RTT"
-        elif self.state == "PROBE_RTT":
+                self.state = BBRStage.PROB_RTT
+        elif self.state == BBRStage.PROB_RTT:
             if current_tick - self.last_ack_tick > self.rt_prop:
-                self.state = "PROBE_BW"
+                self.state = BBRStage.PROB_BW
                 self.cycle_index = 0
     
     def on_timeout(self, seq_num: int, current_tick: int) -> Optional[float]:
         """Handle timeout for BBR."""
         # BBR doesn't reduce cwnd on timeout like Reno
         # Instead, it updates estimates
-        self.btl_bw *= 0.9  # Reduce bandwidth estimate slightly
+        self.btl_bw *= 0.9
         return self.cwnd
     
     def on_dup_ack(self, ack_num: int, current_tick: int) -> Optional[float]:
@@ -189,11 +195,11 @@ class VegasCongestionControl(CongestionControl):
     
     def __init__(self):
         super().__init__()
-        self.base_rtt: float = float('inf')  # Minimum observed RTT
-        self.current_rtt: float = float('inf')  # Current RTT sample
-        self.alpha: float = 1.0  # Vegas parameter for lower threshold
-        self.beta: float = 3.0   # Vegas parameter for upper threshold
-        self.packet_sent_times: dict[int, int] = {}  # Track when packets were sent
+        self.base_rtt: float = float('inf')
+        self.current_rtt: float = float('inf')
+        self.alpha: float = 1.0
+        self.beta: float = 3.0
+        self.packet_sent_times: dict[int, int] = {}
         
     def on_packet_sent(self, seq_num: int, current_tick: int):
         """Record packet sent time for RTT calculation."""
@@ -229,7 +235,7 @@ class VegasCongestionControl(CongestionControl):
                 self.cwnd += 1
             elif diff > self.beta:
                 # Above upper threshold: decrease cwnd
-                self.cwnd = max(self.cwnd - 1, 1)  # Ensure cwnd doesn't go below 1
+                self.cwnd = max(self.cwnd - 1, 1)
             # Else: keep cwnd unchanged (between alpha and beta)
         
         return self.cwnd
