@@ -3,6 +3,7 @@ from Objects.Packet import Packet
 import random
 
 class Link:
+    """Implementation of a link class between Devices."""
     delay_ms: int
     packets: list[Packet]
     router_out: Device
@@ -11,6 +12,15 @@ class Link:
     loss_rate: float
 
     def __init__(self, delay: int, bandwidth_in_bytes: int, loss_rate: float, router_in: Device, router_out: Device):
+        """Constructor for the Link class.
+
+        Args:
+            delay (int): The propagation delay of the link in ms
+            bandwidth_in_bytes (int): The max bandwidth of the link in bytes
+            loss_rate (float): The packet loss probability as a decimal
+            router_in (Device): The Device object on one side of the link
+            router_out (Device): The Device object on the other side of the link
+        """
         self.delay_ms = delay
         self.bandwidth_in_bytes = bandwidth_in_bytes
         self.router_in = router_in
@@ -19,6 +29,14 @@ class Link:
         self.loss_rate = loss_rate
 
     def process_tick(self, tick_num: int):
+        """Called each tick during the simulation.
+
+        Args:
+            tick_num (int): The current tick of the simulation
+
+        Raises:
+            Exception: If the path could not be found to forward the packet along
+        """
         # Check for bandwidth
         used_bandwidth: int = sum(list(map(lambda x: x.packet_size_bytes, self.packets)))
         while (used_bandwidth > self.bandwidth_in_bytes and len(self.packets) > 0):
