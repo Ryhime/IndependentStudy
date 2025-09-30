@@ -3,3 +3,4 @@ class CongestionControlType(str, Enum):
     BBR = "bbr"
     VEGAS = "vegas"
     RENO = "reno"
+    RL = "rl"

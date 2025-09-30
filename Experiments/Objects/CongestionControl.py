@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from Enums.BBRStage import BBRStage
+import random
+import math
 
 class CongestionControl(ABC):
     """Abstract base class for congestion control algorithms."""
@@ -352,7 +354,7 @@ class BBRCongestionControl(CongestionControl):
                 self.state = BBRStage.PROB_BW
                 self.pacing_gain = 1.0
                 self.cycle_index = 0
-        elif self.state == BBRStage.DRAIN:
+        elif self.state == BBRStage.PROB_BW:
             # Cycle through gains: 1.25, 0.75, 1, 1, 1, 1, 1, 1
             gains = [1.25, 0.75, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
             self.pacing_gain = gains[self.cycle_index % len(gains)]
@@ -391,4 +393,271 @@ class BBRCongestionControl(CongestionControl):
         Returns:
             Optional[float]: The new CWND
         """
+        return None
+
+
+class RLCongestionControl(CongestionControl):
+    """Reinforcement Learning-based congestion control algorithm."""
+    
+    def __init__(self):
+        super().__init__()
+        # RL parameters
+        self.learning_rate = 0.1
+        self.discount_factor = 0.9
+        self.epsilon = 0.1  # Exploration rate
+        
+        # State variables
+        self.current_state = "slow_start"
+        self.last_rtt = float('inf')
+        self.rtt_samples = []
+        self.packet_loss_count = 0
+        self.successful_transmissions = 0
+        
+        # Action space: 0=decrease, 1=maintain, 2=increase
+        self.actions = [0, 1, 2]
+        
+        # Simple Q-table: state -> action -> value
+        self.q_table = {
+            "slow_start": {0: 0, 1: 0, 2: 1},  # Prefer increase in slow start
+            "congestion_avoidance": {0: 0, 1: 1, 2: 0.5},  # Prefer maintain in congestion avoidance
+            "congestion_detected": {0: 1, 1: 0.5, 2: 0},  # Prefer decrease when congestion detected
+            "recovery": {0: 0.5, 1: 1, 2: 0}  # Prefer maintain in recovery
+        }
+        
+        # State tracking
+        self.last_action = None
+        self.last_state = None
+        self.last_reward = 0
+        
+    def _get_state(self, current_tick: int) -> str:
+        """Determine the current state based on network conditions.
+        
+        Args:
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            str: Current state identifier
+        """
+        # Calculate average RTT if we have samples
+        avg_rtt = float('inf')
+        if self.rtt_samples:
+            avg_rtt = sum(self.rtt_samples) / len(self.rtt_samples)
+        
+        # State determination logic
+        if self.cwnd < self.ssthresh:
+            return "slow_start"
+        elif self.packet_loss_count > 0:
+            return "congestion_detected"
+        elif self.in_fast_recovery:
+            return "recovery"
+        else:
+            return "congestion_avoidance"
+    
+    def _choose_action(self, state: str) -> int:
+        """Choose an action using epsilon-greedy policy.
+        
+        Args:
+            state (str): Current state
+            
+        Returns:
+            int: Chosen action (0=decrease, 1=maintain, 2=increase)
+        """
+        if random.random() < self.epsilon:
+            # Explore: random action
+            return random.choice(self.actions)
+        else:
+            # Exploit: best known action
+            action_values = self.q_table[state]
+            return max(action_values, key=action_values.get)
+    
+    def _update_q_value(self, state: str, action: int, reward: float, next_state: str):
+        """Update Q-value using Q-learning update rule.
+        
+        Args:
+            state (str): Previous state
+            action (int): Action taken
+            reward (float): Reward received
+            next_state (str): New state after action
+        """
+        current_q = self.q_table[state][action]
+        max_next_q = max(self.q_table[next_state].values())
+        
+        # Q-learning update
+        new_q = current_q + self.learning_rate * (reward + self.discount_factor * max_next_q - current_q)
+        self.q_table[state][action] = new_q
+    
+    def _calculate_reward(self, rtt: float, packet_loss: bool) -> float:
+        """Calculate reward based on network performance.
+        
+        Args:
+            rtt (float): Current RTT measurement
+            packet_loss (bool): Whether packet loss occurred
+            
+        Returns:
+            float: Calculated reward
+        """
+        reward = 0
+        
+        # Reward for low RTT (normalized)
+        if rtt < float('inf'):
+            reward += 10.0 / (1.0 + rtt/100.0)  # Higher reward for lower RTT
+        
+        # Penalty for packet loss
+        if packet_loss:
+            reward -= 20.0
+        
+        # Reward for successful transmissions
+        reward += self.successful_transmissions * 0.1
+        
+        # Reward for efficient window size (not too small, not too large)
+        if 10 <= self.cwnd <= 100:
+            reward += 5.0
+        elif self.cwnd < 5:
+            reward -= 2.0
+        elif self.cwnd > 200:
+            reward -= 5.0
+            
+        return reward
+    
+    def _apply_action(self, action: int):
+        """Apply the chosen action to adjust congestion window.
+        
+        Args:
+            action (int): Action to apply (0=decrease, 1=maintain, 2=increase)
+        """
+        if action == 0:  # Decrease
+            self.cwnd = max(self.cwnd * 0.7, 1.0)
+        elif action == 2:  # Increase
+            if self.cwnd < self.ssthresh:
+                self.cwnd += 1  # Slow start
+            else:
+                self.cwnd += 1.0 / self.cwnd  # Congestion avoidance
+    
+    def on_packet_sent(self, seq_num: int, current_tick: int):
+        """Called when a packet is sent.
+        
+        Args:
+            seq_num (int): Sequence number of sent packet
+            current_tick (int): Current simulation tick
+        """
+        # Store sent time for RTT calculation
+        if not hasattr(self, 'packet_sent_times'):
+            self.packet_sent_times = {}
+        self.packet_sent_times[seq_num] = current_tick
+    
+    def on_ack_received(self, ack_num: int, current_tick: int) -> Optional[float]:
+        """Called when an ACK is received.
+        
+        Args:
+            ack_num (int): ACK number received
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            Optional[float]: New congestion window
+        """
+        self.last_ack_tick = current_tick
+        self.successful_transmissions += 1
+        
+        # Calculate RTT if we have the sent time
+        rtt = float('inf')
+        if hasattr(self, 'packet_sent_times') and ack_num in self.packet_sent_times:
+            sent_time = self.packet_sent_times[ack_num]
+            rtt = current_tick - sent_time
+            self.rtt_samples.append(rtt)
+            # Keep only recent samples
+            if len(self.rtt_samples) > 10:
+                self.rtt_samples.pop(0)
+            del self.packet_sent_times[ack_num]
+        
+        # Get current state
+        current_state = self._get_state(current_tick)
+        
+        # Choose and apply action
+        action = self._choose_action(current_state)
+        self._apply_action(action)
+        
+        # Calculate reward (no packet loss in this event)
+        reward = self._calculate_reward(rtt, False)
+        
+        # Update Q-table if we have previous state and action
+        if self.last_state is not None and self.last_action is not None:
+            self._update_q_value(self.last_state, self.last_action, self.last_reward, current_state)
+        
+        # Store current state and action for next update
+        self.last_state = current_state
+        self.last_action = action
+        self.last_reward = reward
+        
+        return self.cwnd
+    
+    def on_timeout(self, seq_num: int, current_tick: int) -> Optional[float]:
+        """Called when a packet times out.
+        
+        Args:
+            seq_num (int): Sequence number of timed out packet
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            Optional[float]: New congestion window
+        """
+        self.packet_loss_count += 1
+        
+        # Get current state
+        current_state = self._get_state(current_tick)
+        
+        # Choose action (more likely to decrease on timeout)
+        action = 0  # Always decrease on timeout
+        
+        # Apply aggressive reduction
+        self.ssthresh = max(self.cwnd / 2, 2)
+        self.cwnd = 1.0
+        self.in_fast_recovery = False
+        self.dup_ack_count = 0
+        
+        # Calculate reward (penalize timeout heavily)
+        reward = self._calculate_reward(float('inf'), True)
+        
+        # Update Q-table
+        if self.last_state is not None and self.last_action is not None:
+            self._update_q_value(self.last_state, self.last_action, self.last_reward, current_state)
+        
+        # Reset tracking
+        self.last_state = None
+        self.last_action = None
+        
+        return self.cwnd
+    
+    def on_dup_ack(self, ack_num: int, current_tick: int) -> Optional[float]:
+        """Called when a duplicate ACK is received.
+        
+        Args:
+            ack_num (int): ACK number of duplicate ACK
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            Optional[float]: New congestion window
+        """
+        self.dup_ack_count += 1
+        self.packet_loss_count += 1
+        
+        if self.dup_ack_count == 3 and not self.in_fast_recovery:
+            # Fast retransmit
+            self.ssthresh = max(self.cwnd / 2, 2)
+            self.cwnd = self.ssthresh
+            self.in_fast_recovery = True
+            self.recovery_seq = ack_num + 1
+            
+            # Get current state and calculate reward
+            current_state = self._get_state(current_tick)
+            reward = self._calculate_reward(float('inf'), True)
+            
+            # Update Q-table
+            if self.last_state is not None and self.last_action is not None:
+                self._update_q_value(self.last_state, self.last_action, self.last_reward, current_state)
+            
+            self.last_state = None
+            self.last_action = None
+            
+            return self.cwnd
+        
         return None

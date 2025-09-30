@@ -1,5 +1,5 @@
 {
-    "description": "A bus of 4 hosts and 3 routers",
+    "description": "A bus network with RL congestion control",
     "links": [
         {
             "device_one": {
@@ -18,13 +18,13 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         },
         {
             "device_one": {
                 "type": "host",
                 "id": "h2",
-                "congestion_control": "rl",
+                "congestion_control": "reno",
                 "packet_path": [
                     "r1", "r2", "h3"
                 ]
@@ -37,7 +37,7 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         },
         {
             "device_one": {
@@ -54,13 +54,13 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         },
         {
             "device_one": {
                 "type": "host",
                 "id": "h3",
-                "congestion_control": "rl",
+                "congestion_control": "vegas",
                 "packet_path": [
                     "r2", "r1", "h2"
                 ]
@@ -73,7 +73,7 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         },
         {
             "device_one": {
@@ -90,13 +90,13 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         },
         {
             "device_one": {
                 "type": "host",
                 "id": "h4",
-                "congestion_control": "rl",
+                "congestion_control": "bbr",
                 "packet_path": [
                     "r3", "r2", "r1", "h1"
                 ]
@@ -109,7 +109,7 @@
             },
             "link_delay_ms": 100,
             "bandwidth_in_bytes": 100,
-            "loss_rate": 0.1
+            "loss_rate": 0.01
         }
     ]
 }

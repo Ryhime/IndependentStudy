@@ -2,7 +2,7 @@ from Enums.CongestionControlType import CongestionControlType
 from Objects.Device import Device
 from Objects.Packet import Packet
 from Objects.Link import Link
-from Objects.CongestionControl import CongestionControl, RenoCongestionControl, BBRCongestionControl, VegasCongestionControl
+from Objects.CongestionControl import CongestionControl, RenoCongestionControl, BBRCongestionControl, VegasCongestionControl, RLCongestionControl
 from abc import abstractmethod
 
 class Host(Device):
@@ -32,6 +32,8 @@ class Host(Device):
             self.congestion_control = VegasCongestionControl()
         elif congestion_control == CongestionControlType.RENO:
             self.congestion_control = RenoCongestionControl()
+        elif congestion_control == CongestionControlType.RL:
+            self.congestion_control = RLCongestionControl()
         else:
             raise ValueError("Not a valid congestion control enum used")
         
@@ -102,7 +104,7 @@ class Host(Device):
 
         elif ack_num < max(self.unacked_packets.keys(), default=0):
             # Duplicate ACK
-            new_cwnd = self.congestion_control.on_dup_ack(ack_num, current_tick)  # type: ignore
+            new_cwnd = self.congestion_control.on_dup_ack(ack_num, current_tick)
             if new_cwnd is not None:
                 # Fast retransmit triggered
                 self.retransmit_packet(ack_num + 1, current_tick)
@@ -147,7 +149,6 @@ class Host(Device):
         if packet.is_ack:
             self.handle_ack(packet, current_tick)
 
-    @abstractmethod
     def process_tick(self, tick_num: int):
         """Called for each tick during the simulation.
 
@@ -156,18 +157,14 @@ class Host(Device):
         """
         self.check_timeouts(tick_num)
 
-        # TODO - This needs to be much much less hard coded lol
-
-        # Send data packets if we're a source host
-        if self.id == "h1":
-            self.send_data_packet("h2", 1, tick_num)
-            print("CWND 1: ", self.congestion_control.get_cwnd())
-            self.file.write(str(self.congestion_control.get_cwnd()) + "\n")
-        if self.id == "h3":
-            self.send_data_packet("h2", 1, tick_num)
-            print("CWND 2: ", self.congestion_control.get_cwnd())
-            self.file.write(str(self.congestion_control.get_cwnd()) + "\n")
-        if self.id == "h4":
-            self.send_data_packet("h4", 1, tick_num)
-            print("CWND 3: ", self.congestion_control.get_cwnd())
-            self.file.write(str(self.congestion_control.get_cwnd()) + "\n")
+        # Send data packets if we're a source host (limit frequency to avoid flooding)
+        if tick_num % 10 == 0:  # Only try to send every 10 ticks
+            if self.id == "h1":
+                self.send_data_packet("h4", 1, tick_num)
+                self.file.write(str(self.congestion_control.get_cwnd()) + "\n")
+            elif self.id == "h3":
+                self.send_data_packet("h2", 1, tick_num)
+                self.file.write(str(self.congestion_control.get_cwnd()) + "\n")
+            elif self.id == "h4":
+                self.send_data_packet("h1", 1, tick_num)
+                self.file.write(str(self.congestion_control.get_cwnd()) + "\n")

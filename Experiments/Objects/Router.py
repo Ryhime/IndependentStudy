@@ -24,7 +24,6 @@ class Router(Device):
         self.processing_delay_ms = processing_delay_ms
         self.queue = FIFOQueue()
 
-    @abstractmethod
     def process_tick(self, tick_num: int):
         """Called each tick of the simulation.
         Forwards a packet each tick
@@ -40,12 +39,9 @@ class Router(Device):
             return
         packet.processing_time-=1
         if packet.processing_time <= 0:
-            print(self.id, self.forwarding_table)
-            if self.id == "r2":
-                print(self.forwarding_table["h3"].router_out.id)
-                print(self.forwarding_table["h3"].router_in.id)
-                print("==========")
-            to_send_to: Link = self.forwarding_table[packet.id_sequence[0]]
-            packet.processing_time = to_send_to.delay_ms
-            to_send_to.packets.append(packet)
-            self.queue.pop()
+            next_hop = packet.id_sequence[0] if packet.id_sequence else None
+            if next_hop and next_hop in self.forwarding_table:
+                to_send_to: Link = self.forwarding_table[next_hop]
+                packet.processing_time = to_send_to.delay_ms
+                to_send_to.packets.append(packet)
+                self.queue.pop()
