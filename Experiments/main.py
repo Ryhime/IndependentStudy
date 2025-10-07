@@ -65,6 +65,8 @@ network.simulation_start_tick = 0
 # Main loop
 tick_num = 0
 max_ticks = 90000
+throughput_file = open("Throughput", 'w')
+throughput_file.write("Tick,bps,throughput,packets_delivered\n")
 while tick_num < max_ticks:
     time.sleep(.001)
     tick_num += 1
@@ -79,3 +81,4 @@ while tick_num < max_ticks:
         avg_throughput = network.get_average_throughput(tick_num)
         current_throughput = network.get_current_throughput(tick_num)
         print(f"Tick {tick_num}: Average throughput = {avg_throughput:.2f} bps, Current throughput = {current_throughput:.2f} bps, Total packets delivered = {network.total_packets_delivered}")
+        throughput_file.write(f"{tick_num},{avg_throughput:.2f},{current_throughput:.2f},{network.total_packets_delivered}\n")

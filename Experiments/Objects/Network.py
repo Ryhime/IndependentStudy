@@ -14,7 +14,6 @@ class Network:
     total_packets_delivered: int
     total_bytes_delivered: int
     simulation_start_tick: int
-
     def __init__(self):
         """Contructor for the Network object."""
         self.devices = {}
