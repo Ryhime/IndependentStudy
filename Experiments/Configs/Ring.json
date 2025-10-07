@@ -5,7 +5,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h1",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r1", "r2", "r3", "r4", "h4"
                 ]
@@ -24,7 +24,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h2",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r2", "r3", "h3"
                 ]
@@ -43,7 +43,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h3",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r3", "r4", "r5", "r6", "h6"
                 ]
@@ -62,7 +62,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h4",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r4", "r3", "r2", "h2"
                 ]
@@ -81,7 +81,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h5",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r5", "r6", "h6"
                 ]
@@ -100,7 +100,7 @@
             "device_one": {
                 "type": "host",
                 "id": "h6",
-                "congestion_control": "bbr",
+                "congestion_control": "rl",
                 "packet_path": [
                     "r6", "r5", "r4", "r3", "h3"
                 ]

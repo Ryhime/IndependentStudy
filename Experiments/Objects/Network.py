@@ -10,11 +10,19 @@ class Network:
     """
     devices: dict
     links: list[Link]
+    throughput_stats: dict
+    total_packets_delivered: int
+    total_bytes_delivered: int
+    simulation_start_tick: int
 
     def __init__(self):
         """Contructor for the Network object."""
         self.devices = {}
         self.links = []
+        self.throughput_stats = {}
+        self.total_packets_delivered = 0
+        self.total_bytes_delivered = 0
+        self.simulation_start_tick = 0
 
 
     def add_host(self, id: str, routing_path: list[str] = [], congestion_control: CongestionControlType = CongestionControlType.RENO):
@@ -63,8 +71,60 @@ class Network:
         d1: Device = self.devices[device_id_one]
         d2: Device = self.devices[device_id_two]
 
-        link = Link(link_delay_ms, bandwidth_in_bytes, loss_rate, d1, d2)
+        link = Link(link_delay_ms, bandwidth_in_bytes, loss_rate, d1, d2, self)
         self.links.append(link)
 
         d1.forwarding_table[device_id_two] = link
         d2.forwarding_table[device_id_one] = link
+
+    def record_packet_delivery(self, packet_size_bytes: int, current_tick: int):
+        """Record a packet delivery for throughput calculation.
+        
+        Args:
+            packet_size_bytes (int): Size of the delivered packet in bytes
+            current_tick (int): Current simulation tick
+        """
+        self.total_packets_delivered += 1
+        self.total_bytes_delivered += packet_size_bytes
+        
+        # Calculate and store throughput for this interval
+        if current_tick > self.simulation_start_tick:
+            elapsed_ticks = current_tick - self.simulation_start_tick
+            current_throughput = (self.total_bytes_delivered * 8) / elapsed_ticks  # bits per tick
+            self.throughput_stats[current_tick] = current_throughput
+
+    def get_average_throughput(self, current_tick: int) -> float:
+        """Calculate average throughput in bits per second.
+        
+        Args:
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            float: Average throughput in bits per second
+        """
+        if current_tick <= self.simulation_start_tick or len(self.throughput_stats) == 0:
+            return 0.0
+        
+        # Convert from bits per tick to bits per second (assuming 1 tick = 1ms)
+        total_throughput = sum(self.throughput_stats.values())
+        average_throughput_bps = (total_throughput / len(self.throughput_stats)) * 1000
+        
+        return average_throughput_bps
+
+    def get_current_throughput(self, current_tick: int) -> float:
+        """Calculate current throughput in bits per second.
+        
+        Args:
+            current_tick (int): Current simulation tick
+            
+        Returns:
+            float: Current throughput in bits per second
+        """
+        if current_tick <= self.simulation_start_tick or self.total_bytes_delivered == 0:
+            return 0.0
+        
+        elapsed_ticks = current_tick - self.simulation_start_tick
+        # Convert from bytes per tick to bits per second (assuming 1 tick = 1ms)
+        current_throughput_bps = ((self.total_bytes_delivered * 8) / elapsed_ticks) * 1000
+        
+        return current_throughput_bps

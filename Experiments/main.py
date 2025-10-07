@@ -59,6 +59,9 @@ for link in links:
     add_link_to_network(network, link)
 
 
+# Set simulation start tick
+network.simulation_start_tick = 0
+
 # Main loop
 tick_num = 0
 max_ticks = 90000
@@ -70,3 +73,9 @@ while tick_num < max_ticks:
     
     for l in network.links:
         l.process_tick(tick_num)
+    
+    # Log average throughput every 100 ticks
+    if tick_num % 100 == 0:
+        avg_throughput = network.get_average_throughput(tick_num)
+        current_throughput = network.get_current_throughput(tick_num)
+        print(f"Tick {tick_num}: Average throughput = {avg_throughput:.2f} bps, Current throughput = {current_throughput:.2f} bps, Total packets delivered = {network.total_packets_delivered}")

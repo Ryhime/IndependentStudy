@@ -486,36 +486,40 @@ class RLCongestionControl(CongestionControl):
         new_q = current_q + self.learning_rate * (reward + self.discount_factor * max_next_q - current_q)
         self.q_table[state][action] = new_q
     
-    def _calculate_reward(self, rtt: float, packet_loss: bool) -> float:
+    def _calculate_reward(self, rtt: float, packet_loss: bool, throughput: float = 0.0) -> float:
         """Calculate reward based on network performance.
         
         Args:
             rtt (float): Current RTT measurement
             packet_loss (bool): Whether packet loss occurred
+            throughput (float): Current throughput in bps
             
         Returns:
             float: Calculated reward
         """
         reward = 0
         
-        # Reward for low RTT (normalized)
+        # Reward for high throughput (primary objective)
+        if throughput > 0:
+            # Normalize throughput reward (higher throughput = higher reward)
+            # Assuming typical throughput range 0-10000 bps, scale to 0-50 reward
+            reward += (throughput / 200.0)
+        
+        # Reward for low RTT (secondary objective)
         if rtt < float('inf'):
-            reward += 10.0 / (1.0 + rtt/100.0)  # Higher reward for lower RTT
+            reward += 20.0 / (1.0 + rtt/50.0)  # Higher reward for lower RTT
         
-        # Penalty for packet loss
+        # Penalty for packet loss (strong negative signal)
         if packet_loss:
-            reward -= 20.0
+            reward -= 30.0
         
-        # Reward for successful transmissions
-        reward += self.successful_transmissions * 0.1
-        
-        # Reward for efficient window size (not too small, not too large)
-        if 10 <= self.cwnd <= 100:
-            reward += 5.0
+        # Reward for efficient window size (tertiary objective)
+        if 15 <= self.cwnd <= 80:
+            reward += 3.0  # Optimal window size range
         elif self.cwnd < 5:
-            reward -= 2.0
-        elif self.cwnd > 200:
-            reward -= 5.0
+            reward -= 1.0  # Too conservative
+        elif self.cwnd > 150:
+            reward -= 2.0  # Too aggressive
             
         return reward
     
@@ -576,8 +580,13 @@ class RLCongestionControl(CongestionControl):
         action = self._choose_action(current_state)
         self._apply_action(action)
         
-        # Calculate reward (no packet loss in this event)
-        reward = self._calculate_reward(rtt, False)
+        # Get current throughput (simplified estimation based on window size and RTT)
+        estimated_throughput = 0.0
+        if rtt > 0 and rtt < float('inf'):
+            estimated_throughput = (self.cwnd * 8) / (rtt / 1000.0)  # Convert to bps
+        
+        # Calculate reward including throughput
+        reward = self._calculate_reward(rtt, False, estimated_throughput)
         
         # Update Q-table if we have previous state and action
         if self.last_state is not None and self.last_action is not None:

@@ -1,6 +1,10 @@
 from Objects.Device import Device
 from Objects.Packet import Packet
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Objects.Network import Network
 
 class Link:
     """Implementation of a link class between Devices."""
@@ -11,7 +15,7 @@ class Link:
     bandwidth_in_bytes: int
     loss_rate: float
 
-    def __init__(self, delay: int, bandwidth_in_bytes: int, loss_rate: float, router_in: Device, router_out: Device):
+    def __init__(self, delay: int, bandwidth_in_bytes: int, loss_rate: float, router_in: Device, router_out: Device, network: 'Network' = None):
         """Constructor for the Link class.
 
         Args:
@@ -20,6 +24,7 @@ class Link:
             loss_rate (float): The packet loss probability as a decimal
             router_in (Device): The Device object on one side of the link
             router_out (Device): The Device object on the other side of the link
+            network (Network, optional): Reference to the Network for throughput tracking
         """
         self.delay_ms = delay
         self.bandwidth_in_bytes = bandwidth_in_bytes
@@ -27,6 +32,7 @@ class Link:
         self.router_out = router_out
         self.packets = []
         self.loss_rate = loss_rate
+        self.network = network
 
     def process_tick(self, tick_num: int):
         """Called each tick during the simulation.
@@ -74,6 +80,10 @@ class Link:
                     
                     # If this is a data packet (not ACK), generate and send ACK back
                     if not packet.is_ack:
+                        # Record packet delivery for throughput calculation
+                        if self.network:
+                            self.network.record_packet_delivery(packet.packet_size_bytes, tick_num)
+                        
                         # Create ACK packet with path back to source
                         # Use the original_path from the data packet to determine the return path
                         routers = packet.original_path[:-1]  # Get all routers from the original path
